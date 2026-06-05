@@ -1,0 +1,71 @@
+name: Open Release PR
+
+on:
+  workflow_dispatch:
+  # Descomente para habilitar o disparo automático todo dia às 20h (America/Sao_Paulo).
+  # GitHub Actions executa cron em UTC: 20h BRT (UTC-3) = 23h UTC.
+  # Atenção: no horário de verão de outras regiões o offset pode mudar; BRT atualmente não tem DST.
+  # schedule:
+  #   - cron: '0 1 * * *'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-release-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Resolve release metadata
+        id: meta
+        run: |
+          DATE=$(TZ=America/Sao_Paulo date +%Y-%m-%d)
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "title=release 1: $DATE" >> "$GITHUB_OUTPUT"
+
+      - name: Build PR body
+        run: |
+          git fetch origin main --no-tags
+
+          # Squash merge: o número do PR fica no final da mensagem como "(#N)"
+          PRS=$(git log origin/main..HEAD --pretty=format:'%s' \
+            | grep -oE '\(#[0-9]+\)' \
+            | grep -oE '[0-9]+' \
+            | sort -n \
+            | awk '{print "- #"$1}')
+          if [ -z "$PRS" ]; then
+            PRS="- Nenhum PR novo desde a última release"
+          fi
+
+          {
+            echo "## 🚀 Release"
+            echo
+            echo "### ✨ PRs contidos na release"
+            echo
+            echo "$PRS"
+          } > pr-body.md
+
+      - name: Create or update Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          EXISTING=$(gh pr list --base main --head dev --state open --json number --jq '.[0].number')
+
+          if [ -n "$EXISTING" ]; then
+            gh pr edit "$EXISTING" \
+              --title "${{ steps.meta.outputs.title }}" \
+              --body-file pr-body.md
+            echo "PR existente atualizado: #$EXISTING"
+          else
+            gh pr create \
+              --base main \
+              --head dev \
+              --title "${{ steps.meta.outputs.title }}" \
+              --body-file pr-body.md
+          fi
