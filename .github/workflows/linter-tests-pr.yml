@@ -1,27 +1,58 @@
-name: Linter & Tests PR
+name: CI
 
+# Roda nos Pull Requests que tenham como destino main ou dev.
+# "synchronize" garante que rode novamente a cada novo push na PR.
 on:
   pull_request:
-    branches:
-      - dev
+    branches: [main, dev]
+    types: [opened, synchronize, reopened]
+
+# Cancela execuções antigas da mesma PR quando chega um push novo.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  lint-and-test:
+  lint:
+    name: Lint & Format
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: .nvmrc
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
+      - name: Prettier (check)
+        run: npm run format:check
 
-      - name: Test
-        run: npm run test
+      - name: ESLint (sem warnings)
+        run: npm run lint:check
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Jest
+        run: npm test
