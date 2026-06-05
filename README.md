@@ -141,3 +141,5 @@ This repo is ready to be wired to a GitHub Actions workflow that:
 
 Authentication to AWS should use **OIDC** (GitHub → IAM role), not long-lived
 access keys.
+
+adicionando teste no MD
