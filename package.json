@@ -14,7 +14,9 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "lint:check": "eslint \"{src,test}/**/*.ts\" --max-warnings 0"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
