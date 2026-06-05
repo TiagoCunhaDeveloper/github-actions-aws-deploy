@@ -7,6 +7,8 @@ on:
   # Atenção: no horário de verão de outras regiões o offset pode mudar; BRT atualmente não tem DST.
   # schedule:
   #   - cron: '0 1 * * *'
+  push:
+    branches: [dev]
 
 permissions:
   contents: read

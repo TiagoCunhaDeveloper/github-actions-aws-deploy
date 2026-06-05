@@ -55,4 +55,8 @@ jobs:
         run: npm ci
 
       - name: Jest
+<<<<<<< HEAD
         run: npm test
+=======
+        run: npm test
+>>>>>>> 6e91fc9e1d20cbfae592e0e6c0db0ee8e0107664
